@@ -25,7 +25,7 @@ router.use(auth);
 router.get(
   "/",
   asyncHandler(async (req, res) => {
-    const filter = { owner: req.user.id };
+    const filter = {};
     if (req.query.date) {
       if (!isValidReportDate(req.query.date)) {
         const error = new Error("Date must use YYYY-MM-DD format.");
@@ -67,7 +67,7 @@ router.patch(
     }
 
     const report = await Report.findOneAndUpdate(
-      { _id: req.params.id, owner: req.user.id },
+      { _id: req.params.id },
       { $set: fields },
       { new: true, runValidators: true },
     );
@@ -83,7 +83,7 @@ router.patch(
 router.delete(
   "/:id",
   asyncHandler(async (req, res) => {
-    const report = await Report.findOneAndDelete({ _id: req.params.id, owner: req.user.id });
+    const report = await Report.findOneAndDelete({ _id: req.params.id });
     if (!report) {
       const error = new Error("Report not found.");
       error.status = 404;
@@ -109,7 +109,7 @@ router.post(
       throw error;
     }
 
-    const report = await Report.findOne({ _id: req.params.id, owner: req.user.id });
+    const report = await Report.findOne({ _id: req.params.id });
     if (!report) {
       const error = new Error("Report not found.");
       error.status = 404;
@@ -146,7 +146,7 @@ router.delete(
       throw error;
     }
 
-    const report = await Report.findOne({ _id: req.params.id, owner: req.user.id });
+    const report = await Report.findOne({ _id: req.params.id });
     if (!report) {
       const error = new Error("Report not found.");
       error.status = 404;

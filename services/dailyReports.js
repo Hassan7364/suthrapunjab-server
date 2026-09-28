@@ -5,42 +5,41 @@ import { businessDate, shiftBusinessDate } from "../utils/businessDate.js";
 
 const createTodayRoster = async (today) => {
   const yesterday = shiftBusinessDate(today, -1);
-  const owners = await User.find({ role: "superAdmin" }).select("_id").lean();
+  const owner = await User.findOne({ role: "superAdmin" }).select("_id").lean();
+  if (!owner) return;
 
-  for (const owner of owners) {
-    const yesterdayReports = await Report.find({ owner: owner._id, date: yesterday })
-      .select("amo uc tcp supervisor vehicleNo remarks")
-      .lean();
-    const rosterByVehicle = new Map();
+  const yesterdayReports = await Report.find({ date: yesterday })
+    .select("amo uc tcp supervisor vehicleNo remarks")
+    .lean();
+  const rosterByVehicle = new Map();
 
-    for (const report of yesterdayReports) {
-      if (!rosterByVehicle.has(report.vehicleNo)) rosterByVehicle.set(report.vehicleNo, report);
-    }
-
-    const operations = [...rosterByVehicle.values()].map((report) => ({
-      updateOne: {
-        filter: { owner: owner._id, date: today, vehicleNo: report.vehicleNo },
-        update: {
-          $setOnInsert: {
-            owner: owner._id,
-            date: today,
-            amo: report.amo,
-            uc: report.uc,
-            tcp: report.tcp || "",
-            supervisor: report.supervisor,
-            vehicleNo: report.vehicleNo,
-            remarks: report.remarks || "",
-            trip1Image: null,
-            trip2Image: null,
-            trip3Image: null,
-          },
-        },
-        upsert: true,
-      },
-    }));
-
-    if (operations.length) await Report.bulkWrite(operations, { ordered: false });
+  for (const report of yesterdayReports) {
+    if (!rosterByVehicle.has(report.vehicleNo)) rosterByVehicle.set(report.vehicleNo, report);
   }
+
+  const operations = [...rosterByVehicle.values()].map((report) => ({
+    updateOne: {
+      filter: { date: today, vehicleNo: report.vehicleNo },
+      update: {
+        $setOnInsert: {
+          owner: owner._id,
+          date: today,
+          amo: report.amo,
+          uc: report.uc,
+          tcp: report.tcp || "",
+          supervisor: report.supervisor,
+          vehicleNo: report.vehicleNo,
+          remarks: report.remarks || "",
+          trip1Image: null,
+          trip2Image: null,
+          trip3Image: null,
+        },
+      },
+      upsert: true,
+    },
+  }));
+
+  if (operations.length) await Report.bulkWrite(operations, { ordered: false });
 };
 
 const deleteExpiredImages = async (today) => {

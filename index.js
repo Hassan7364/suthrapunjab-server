@@ -12,7 +12,7 @@ import { millisecondsUntilNextBusinessDay } from "./utils/businessDate.js";
 
 const app = express();
 const port = Number(process.env.PORT) || 5000;
-const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:5173").split(",").map((origin) => origin.trim());
+// const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:5173").split(",").map((origin) => origin.trim());
 
 const scheduleDailyReportMaintenance = () => {
   const timer = setTimeout(() => {
@@ -26,7 +26,16 @@ const scheduleDailyReportMaintenance = () => {
 
 app.disable("x-powered-by");
 app.use(helmet());
-app.use(cors({ origin: allowedOrigins }));
+// app.use(cors({ origin: allowedOrigins }));
+app.use(
+  cors({
+    origin: [
+      "https://suthrapunjab-client.vercel.app", // 👈 Aapka Vercel Frontend Domain
+      "http://localhost:5173", // Local development ke liye
+    ],
+    credentials: true,
+  }),
+);
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
