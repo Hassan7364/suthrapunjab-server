@@ -42,6 +42,10 @@ app.use((_req, res) => {
   res.status(404).json({ success: false, message: "Route not found." });
 });
 
+app.get("/", (req, res) => {
+  res.send("Server is running");
+});
+
 app.use((error, _req, res, _next) => {
   if (error.code === 11000) {
     return res.status(409).json({ success: false, message: "An account with this email already exists." });
