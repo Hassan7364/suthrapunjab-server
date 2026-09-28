@@ -12,7 +12,10 @@ import { millisecondsUntilNextBusinessDay } from "./utils/businessDate.js";
 
 const app = express();
 const port = Number(process.env.PORT) || 5000;
-// const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:5173").split(",").map((origin) => origin.trim());
+const allowedOrigins = [
+  ...(process.env.CLIENT_URL || "http://localhost:5173").split(",").map((origin) => origin.trim()),
+  "https://sarco-trip.vercel.app",
+];
 
 const scheduleDailyReportMaintenance = () => {
   const timer = setTimeout(() => {
@@ -26,13 +29,9 @@ const scheduleDailyReportMaintenance = () => {
 
 app.disable("x-powered-by");
 app.use(helmet());
-// app.use(cors({ origin: allowedOrigins }));
 app.use(
   cors({
-    origin: [
-      "https://suthrapunjab-client.vercel.app", // 👈 Aapka Vercel Frontend Domain
-      "http://localhost:5173", // Local development ke liye
-    ],
+    origin: allowedOrigins,
     credentials: true,
   }),
 );
@@ -72,6 +71,8 @@ app.use((error, _req, res, _next) => {
   });
 });
 
+export { app };
+
 const start = async () => {
   if (!process.env.MONGODB_URI) throw new Error("MONGODB_URI is required in server/.env.");
   if (!process.env.JWT_SECRET) throw new Error("JWT_SECRET is required in server/.env.");
@@ -83,7 +84,9 @@ const start = async () => {
   app.listen(port, () => console.log(`API listening on http://localhost:${port}`));
 };
 
-start().catch((error) => {
-  console.error(error.message);
-  process.exitCode = 1;
-});
+if (!process.env.VERCEL) {
+  start().catch((error) => {
+    console.error(error.message);
+    process.exitCode = 1;
+  });
+}
